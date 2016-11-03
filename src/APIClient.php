@@ -21,38 +21,38 @@ function swagger_autoloader($className) {
 		include $currentDir . DIRECTORY_SEPARATOR . 'models' . DIRECTORY_SEPARATOR . $className . '.php';
 	}
 }
-spl_autoload_register('swagger_autoloader');
+// spl_autoload_register('swagger_autoloader');
 
 interface RequestSigner {
-    
+
     public function signUrl($url);
-        
+
     public function signContent($requestBody, $headers);
 
 }
 
 class DefaultRequestSigner implements RequestSigner {
-    
+
     public function signUrl($url){
         return $url;
 	}
-        
+
     public function signContent($requestBody, $headers){
         return $requestBody;
 	}
 }
 
 class APIClient {
-	
+
 	private static $packageInfo;
-	
+
 	public static function getPackageInfo(){
 		if(is_null(self::$packageInfo)){
 			$filename = dirname(__FILE__)."/composer.json";
 			if(!file_exists($filename)){
 				$filename = dirname(__FILE__)."/../composer.json";
 			}
-			
+
 			$json = file_get_contents($filename);
 			$jsonArray = json_decode($json, true);
 			self::$packageInfo = array();
@@ -108,13 +108,13 @@ class APIClient {
 		foreach ($this->headers as $key => $val) {
 			$headers[] = "$key: $val";
 		}
-		
+
 		if ($headerParams != null) {
 			foreach ($headerParams as $key => $val) {
 				$headers[] = "$key: $val";
 			}
 		}
-		
+
 		$isFileUpload = false;
 		if (empty($postData)){
 			$headers[] = "Content-type: text/html";
@@ -169,14 +169,14 @@ class APIClient {
 
 		$url = self::encodeURI($this->signer->signUrl($url));
 		curl_setopt($curl, CURLOPT_URL, $url);
-		
+
 		if($outFileStream !== null){
 			curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
 			// curl_setopt($curl, CURLOPT_FILE, $outFileStream->getInputStream());
 			curl_setopt($curl, CURLOPT_HEADERFUNCTION, array($outFileStream, 'headerCallback'));
 			curl_setopt($curl, CURLOPT_WRITEFUNCTION, array($outFileStream, 'bodyCallback'));
 		}
-		
+
 		if($this->debug){
 			$body = "> Request Body: $this->newline";
 			if($isFileUpload){
@@ -186,14 +186,14 @@ class APIClient {
 			}
 			echo $this->newline;
 		}
-		
+
 		// Make the request
 		$response = curl_exec($curl);
 		$response_info = curl_getinfo($curl);
-		
+
 		// Close curl
 		curl_close($curl);
-		
+
 		if($this->debug){
 			$body = "< Response Body: $this->newline";
 			if($outFileStream !== null){
@@ -205,7 +205,7 @@ class APIClient {
 			fwrite($curl_log, $this->newline);
 			fclose($curl_log);
 		}
-		
+
 		// Handle the response
 		if ($response_info['http_code'] == 0) {
 			throw new ApiException("TIMEOUT: api call to " . $url .
@@ -234,7 +234,7 @@ class APIClient {
 			if(is_array($jsonArray)){
 				$msg = $jsonArray['error_message'];
 			}
-			throw new ApiException($msg, $response_info['http_code']); 
+			throw new ApiException($msg, $response_info['http_code']);
 		}
 	}
 
@@ -362,7 +362,7 @@ class APIClient {
 
 	public static function encodeURI($url) {
 	    $reserved = array(
-	        '%2D'=>'-','%5F'=>'_','%2E'=>'.','%21'=>'!', 
+	        '%2D'=>'-','%5F'=>'_','%2E'=>'.','%21'=>'!',
 	        '%2A'=>'*', '%27'=>"'", '%28'=>'(', '%29'=>')'
 	    );
 	    $unescaped = array(
@@ -377,12 +377,12 @@ class APIClient {
 	    return strtr(rawurlencode($url), array_merge($reserved,$unescaped,$score));
 
 	}
-	
+
 	public static function encodeURIComponent($str) {
 	    $revert = array('%21'=>'!', '%2A'=>'*', '%27'=>"'", '%28'=>'(', '%29'=>')');
 	    return strtr(rawurlencode($str), $revert);
 	}
-	
+
 	public static function readAsDataURL($filePath) {
 		return 'data:'.self::getMimeType($filePath).';base64,'.base64_encode(file_get_contents($filePath));
 	}
@@ -396,8 +396,8 @@ class APIClient {
 	public static function startsWith($haystack, $needle) {
 		return strncmp($haystack, $needle, strlen($needle)) === 0;
 	}
-	
-	
+
+
 	/**
 	* Ends the $haystack string with the suffix $needle?
 	* @param  string
@@ -413,7 +413,7 @@ class ApiException extends Exception {
 	public function _construct($message, $code = 0, Exception $previous = null){
 		parent::__construct($message, $code, $previous);
 	}
-	
+
 	public function __toString() {
         return __CLASS__ . ": [{$this->code}]: {$this->message}\n";
     }
